@@ -1,0 +1,221 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="description" content="" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Laravel接入Apollo | OkamiChen</title>
+<link rel="shortcut icon" href="https://okami-chen.github.io/favicon.ico">
+<link rel="stylesheet" href="https://okami-chen.github.io/styles/main.css">
+
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+<script src="https://cdn.bootcss.com/moment.js/2.23.0/moment.min.js"></script>
+
+
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://okami-chen.github.io">
+  <img class="avatar" src="https://okami-chen.github.io/images/avatar.png" alt="" width="80px" height="80px">
+  </a>
+  <h1 class="site-title">
+    OkamiChen
+  </h1>
+  <p class="site-description">
+    雪花勇闯天涯
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+</div>
+
+      
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              Laravel接入Apollo
+            </h2>
+            <div class="post-info">
+              <time class="post-time">
+                · 2019-04-11 ·
+              </time>
+              
+            </div>
+            <div class="post-content">
+              <pre><code class="language-php">&lt;?php
+
+/**
+ * Created by PhpStorm.
+ * User: dehua
+ * Date: 2019/3/1
+ * Time: 14:17
+ */
+
+
+return [
+
+    &#39;server&#39; =&gt; &#39;http://10.208.204.46:8161&#39;,
+
+    &#39;query&#39; =&gt; [
+        &#39;app_id&#39; =&gt; &#39;wuc&#39;,
+        &#39;cluster&#39; =&gt; &#39;default&#39;,
+        &#39;namespace&#39; =&gt; &#39;application&#39;,
+    ]
+
+];</code></pre>
+<p>守护进程</p>
+<pre><code class="language-php">class SyncCommand extends Command
+{
+    /**
+     * The name and signature of the console command.
+     *
+     * @var string
+     */
+    protected $signature = &#39;ue:apollo:sync&#39;;
+
+    /**
+     * The console command description.
+     *
+     * @var string
+     */
+    protected $description = &#39;阿波罗同步&#39;;
+
+    protected $config = [];
+
+    protected $url;
+
+    /**
+     * Create a new command instance.
+     *
+     * @return void
+     */
+    public function __construct()
+    {
+        parent::__construct();
+
+        $this-&gt;url = config(&#39;apollo.server&#39;) . &#39;/configs/&#39; . implode(&#39;/&#39;, array_values(config(&#39;apollo.query&#39;)));
+    }
+
+    /**
+     * Execute the console command.
+     *
+     * @return mixed
+     */
+    public function handle()
+    {
+
+
+        $this-&gt;doSync();
+    }
+
+
+    protected function doSync()
+    {
+
+        $client = new Client([&#39;timeout&#39; =&gt; 2.00]);
+
+        try {
+            $response = $client-&gt;request(&#39;GET&#39;, $this-&gt;url);
+            $body = json_decode($response-&gt;getBody()-&gt;getContents(), true);
+            $cfg = Arr::get($body, &#39;configurations&#39;, []);
+            if (!$cfg) {
+                return true;
+            }
+            $cfg = array_map(function ($value) {
+                if ($row = json_decode($value, true)) {
+                    return $row;
+                }
+                return $value;
+            }, $cfg);
+
+            $items = [];
+
+            foreach ($cfg as $key =&gt; $value) {
+                data_set($items, $key, $value);
+            }
+
+            foreach ($items as $k =&gt; $item) {
+                $this-&gt;line(&#39;Saving [&#39;.$k.&#39;]&#39;);
+                $this-&gt;save($k, $item);
+            }
+
+        } catch (\Exception $ex) {
+            $this-&gt;error($ex-&gt;getMessage());
+        }
+
+    }
+
+
+    protected function save($fileName, $item)
+    {
+
+        if(config(&#39;apollo.sync.redis&#39;, false)){
+            cache()-&gt;tags(&#39;apollo&#39;)-&gt;forever($fileName, $item);
+            $this-&gt;line(&#39;Saving To Redis &#39;.$fileName);
+        }
+
+
+        if(config(&#39;apollo.sync.file&#39;, false)){
+
+            $this-&gt;line(&#39;Saving To File &#39;.$fileName);
+
+            $fileName = &#39;apollo/&#39; . $fileName . &#39;.php&#39;;
+            ksort($item);
+            $content = implode(&quot;\r\n&quot;, [
+                &quot;&lt;?php&quot;,
+                &quot;return&quot;,
+                var_export($item, true) . &#39;;&#39;
+            ]);
+
+            Storage::disk(&#39;config&#39;)-&gt;put($fileName, $content);
+        }
+
+        $this-&gt;line(&#39;==================&#39;);
+    }
+}</code></pre>
+
+            </div>
+          </article>
+        </div>
+    
+        
+
+        
+    
+        <div class="site-footer">
+  Powered by 131.im
+</div>
+
+<script>
+  hljs.initHighlightingOnLoad()
+</script>
+
+      </div>
+    </div>
+  </body>
+</html>
