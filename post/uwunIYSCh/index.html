@@ -77,22 +77,23 @@
         <div class="content-container" data-aos="fade-up">
           <div class="post-detail">
             <h2 class="post-title">array_merge 和 array+ 的区别</h2>
-            <div class="post-date">2019-04-11</div>
+            <div class="post-date">2019-04-11 11:13</div>
             
             <div class="post-content">
               <p>首先来看看键名是string，两者区别：</p>
-<pre><code class="language-php">$arr1 = array(&#39;a&#39;=&gt;&#39;PHP&#39;);
-$arr2 = array(&#39;a&#39;=&gt;&#39;PYTHON&#39;);
+<pre><code class="language-php">$arr1 = array('a'=&gt;'PHP');
+$arr2 = array('a'=&gt;'PYTHON');
 print_r(array_merge($arr1,$arr2)); //Array ( [a] =&gt; PYTHON ) 如果键名为字符，且键名相同，array_merge()后面数组元素值会覆盖前面数组元素值
 print_r($arr1+$arr2); //Array ( [a] =&gt; PHP )如果键名为字符，且键名相同，数组相加会将最先出现的值作为结果
 
 //再比如
-$arr1 = array(&#39;a&#39;=&gt;&#39;1&#39;,&#39;b&#39;=&gt;&#39;2&#39;);
-$arr2 = array(&#39;a&#39;=&gt;&#39;1&#39;,&#39;b&#39;=&gt;&#39;3&#39;,&#39;c&#39;=&gt;&#39;2&#39;);
+$arr1 = array('a'=&gt;'1','b'=&gt;'2');
+$arr2 = array('a'=&gt;'1','b'=&gt;'3','c'=&gt;'2');
 $ret = array_merge($arr1,$arr2);
 print_r($ret);//Array ( [a] =&gt; 1 [b] =&gt; 3 [c] =&gt; 2 )
 $ret = $arr1+$arr2;
-print_r($ret);//Array ( [a] =&gt; 1 [b] =&gt; 2 [c] =&gt; 2 )</code></pre>
+print_r($ret);//Array ( [a] =&gt; 1 [b] =&gt; 2 [c] =&gt; 2 )
+</code></pre>
 <p>如果键名是数字，两者区别：</p>
 <pre><code class="language-php">$arr1 = array(&quot;JAVA&quot;,&quot;PHP&quot;);
 $arr2 = array(&quot;PYTHON&quot;,&quot;PHP&quot;);
@@ -101,8 +102,8 @@ print_r($arr1+$arr2);//Array ( [0] =&gt; JAVA [1] =&gt; PHP )如果键名为数�
 
 //再比如
 
-$arr1 = array(1=&gt;&#39;1&#39;,2=&gt;&#39;2&#39;);
-$arr2 = array(1=&gt;&#39;1&#39;,2=&gt;&#39;3&#39;,8=&gt;&#39;2&#39;);
+$arr1 = array(1=&gt;'1',2=&gt;'2');
+$arr2 = array(1=&gt;'1',2=&gt;'3',8=&gt;'2');
 
 $ret = array_merge($arr1,$arr2);
 print_r($ret);//Array ( [0] =&gt; 1 [1] =&gt; 2 [2] =&gt; 1 [3] =&gt; 3 [4] =&gt; 2 ) 如果数组中的键名为数字时，会格式化键名并保留所有键值。
@@ -112,9 +113,11 @@ $arr1 = array(1,2);
 $arr2 = array(1,2,8);
 
 $ret = array_merge($arr1,$arr2);
-print_r($ret);//Array ( [0] =&gt; 1 [1] =&gt; 2 [2] =&gt; 1 [3] =&gt; 2 [4] =&gt; 8 )</code></pre>
+print_r($ret);//Array ( [0] =&gt; 1 [1] =&gt; 2 [2] =&gt; 1 [3] =&gt; 2 [4] =&gt; 8 )
+</code></pre>
 <p>特别要注意</p>
-<pre><code class="language-php">$arr1 = array(&quot;a&quot;=&gt;&quot;PHP&quot;,&quot;C&quot;); $arr2 = array(&quot;a&quot;=&gt;&quot;JAVA&quot;,&quot;C&quot;,&quot;PYTHON&quot;); print_r(array_merge_recursive($arr1, $arr2)); //Array ( [a] =&gt; Array ( [0] =&gt; PHP [1] =&gt; JAVA ) [0] =&gt; C [1] =&gt; C [2] =&gt; PYTHON )</code></pre>
+<pre><code class="language-php">$arr1 = array(&quot;a&quot;=&gt;&quot;PHP&quot;,&quot;C&quot;); $arr2 = array(&quot;a&quot;=&gt;&quot;JAVA&quot;,&quot;C&quot;,&quot;PYTHON&quot;); print_r(array_merge_recursive($arr1, $arr2)); //Array ( [a] =&gt; Array ( [0] =&gt; PHP [1] =&gt; JAVA ) [0] =&gt; C [1] =&gt; C [2] =&gt; PYTHON )
+</code></pre>
 
             </div>
             

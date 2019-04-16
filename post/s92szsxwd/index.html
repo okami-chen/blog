@@ -77,7 +77,7 @@
         <div class="content-container" data-aos="fade-up">
           <div class="post-detail">
             <h2 class="post-title">Laravel接入Apollo</h2>
-            <div class="post-date">2016-04-11</div>
+            <div class="post-date">2016-04-11 10:48</div>
             
             <div class="post-content">
               <pre><code class="language-php">&lt;?php
@@ -92,15 +92,16 @@
 
 return [
 
-    &#39;server&#39; =&gt; &#39;http://10.208.204.46:8161&#39;,
+    'server' =&gt; 'http://10.208.204.46:8161',
 
-    &#39;query&#39; =&gt; [
-        &#39;app_id&#39; =&gt; &#39;wuc&#39;,
-        &#39;cluster&#39; =&gt; &#39;default&#39;,
-        &#39;namespace&#39; =&gt; &#39;application&#39;,
+    'query' =&gt; [
+        'app_id' =&gt; 'wuc',
+        'cluster' =&gt; 'default',
+        'namespace' =&gt; 'application',
     ]
 
-];</code></pre>
+];
+</code></pre>
 <p>守护进程</p>
 <pre><code class="language-php">class SyncCommand extends Command
 {
@@ -109,14 +110,14 @@ return [
      *
      * @var string
      */
-    protected $signature = &#39;ue:apollo:sync&#39;;
+    protected $signature = 'ue:apollo:sync';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = &#39;阿波罗同步&#39;;
+    protected $description = '阿波罗同步';
 
     protected $config = [];
 
@@ -131,7 +132,7 @@ return [
     {
         parent::__construct();
 
-        $this-&gt;url = config(&#39;apollo.server&#39;) . &#39;/configs/&#39; . implode(&#39;/&#39;, array_values(config(&#39;apollo.query&#39;)));
+        $this-&gt;url = config('apollo.server') . '/configs/' . implode('/', array_values(config('apollo.query')));
     }
 
     /**
@@ -150,12 +151,12 @@ return [
     protected function doSync()
     {
 
-        $client = new Client([&#39;timeout&#39; =&gt; 2.00]);
+        $client = new Client(['timeout' =&gt; 2.00]);
 
         try {
-            $response = $client-&gt;request(&#39;GET&#39;, $this-&gt;url);
+            $response = $client-&gt;request('GET', $this-&gt;url);
             $body = json_decode($response-&gt;getBody()-&gt;getContents(), true);
-            $cfg = Arr::get($body, &#39;configurations&#39;, []);
+            $cfg = Arr::get($body, 'configurations', []);
             if (!$cfg) {
                 return true;
             }
@@ -173,7 +174,7 @@ return [
             }
 
             foreach ($items as $k =&gt; $item) {
-                $this-&gt;line(&#39;Saving [&#39;.$k.&#39;]&#39;);
+                $this-&gt;line('Saving ['.$k.']');
                 $this-&gt;save($k, $item);
             }
 
@@ -187,30 +188,31 @@ return [
     protected function save($fileName, $item)
     {
 
-        if(config(&#39;apollo.sync.redis&#39;, false)){
-            cache()-&gt;tags(&#39;apollo&#39;)-&gt;forever($fileName, $item);
-            $this-&gt;line(&#39;Saving To Redis &#39;.$fileName);
+        if(config('apollo.sync.redis', false)){
+            cache()-&gt;tags('apollo')-&gt;forever($fileName, $item);
+            $this-&gt;line('Saving To Redis '.$fileName);
         }
 
 
-        if(config(&#39;apollo.sync.file&#39;, false)){
+        if(config('apollo.sync.file', false)){
 
-            $this-&gt;line(&#39;Saving To File &#39;.$fileName);
+            $this-&gt;line('Saving To File '.$fileName);
 
-            $fileName = &#39;apollo/&#39; . $fileName . &#39;.php&#39;;
+            $fileName = 'apollo/' . $fileName . '.php';
             ksort($item);
             $content = implode(&quot;\r\n&quot;, [
                 &quot;&lt;?php&quot;,
                 &quot;return&quot;,
-                var_export($item, true) . &#39;;&#39;
+                var_export($item, true) . ';'
             ]);
 
-            Storage::disk(&#39;config&#39;)-&gt;put($fileName, $content);
+            Storage::disk('config')-&gt;put($fileName, $content);
         }
 
-        $this-&gt;line(&#39;==================&#39;);
+        $this-&gt;line('==================');
     }
-}</code></pre>
+}
+</code></pre>
 
             </div>
             
