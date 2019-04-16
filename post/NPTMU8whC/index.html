@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>Redis和mysql数据保持一致 | Hub</title>
+<meta name="description" content="">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="shortcut icon" href="https://www.131.im/favicon.ico">
+<link rel="stylesheet" href="https://www.131.im/styles/main.css">
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+
+
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://www.131.im">
+        <img src="https://www.131.im/images/avatar.png" class="site-logo">
+        <h1 class="site-title">Hub</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="/" class="site-nav">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="site-nav">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="site-nav">
+            标签
+          </a>
+        
+      
+        
+          <a href="/post/about" class="site-nav">
+            关于
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="site-description">
+      
+    </div>
+    <div class="site-footer">
+      
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title">Redis和mysql数据保持一致</h2>
+            <div class="post-date">2019-04-16</div>
+            
+            <div class="post-content">
+              <h2 id="部署图"><strong>部署图</strong></h2><p><img src="https://img-blog.csdn.net/20180710182632193?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2ZseWF3YXlqaA==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70" alt=""></p>
+<p>这是一开始的部署图,没有加消息队列,消息队列后面再加的</p>
+<h2 id="mysql配置">mysql配置</h2><p>canal的原理是基于mysql binlog技术，所以这里一定需要开启mysql的binlog写入功能，建议配置binlog模式为row.<strong>针对阿里云RDS账号默认已经有binlog dump权限,不需要任何权限或者binlog设置,可以直接跳过这一步</strong></p>
+<pre><code>[mysqld]log-bin=mysql-bin #添加这一行就okbinlog-format=ROW #选择row模式server_id=1 #配置mysql replaction需要定义，不能和canal的slaveId重复</code></pre><p> canal的原理是模拟自己为mysql slave，所以这里一定需要做为mysql slave的相关权限.</p>
+<pre><code>CREATE USER canal IDENTIFIED BY &#39;canal&#39;;  GRANT SELECT, REPLICATION SLAVE, REPLICATION CLIENT ON *.* TO &#39;canal&#39;@&#39;%&#39;;-- GRANT ALL PRIVILEGES ON *.* TO &#39;canal&#39;@&#39;%&#39; ;FLUSH PRIVILEGES;</code></pre><p><strong>canal的安装</strong></p>
+<p>下载地址</p>
+<p><a href="https://github.com/alibaba/canal/releases">https://github.com/alibaba/canal/releases</a></p>
+<p>最好下载最新版本,新版本会修复一些bug</p>
+<p>下载后直接解压缩,进入canal文件,目录结构如下</p>
+<pre><code>drwxr-xr-x. 2 root root 4096 7月  10 15:31 bindrwxr-xr-x. 4 root root 4096 7月  10 16:40 confdrwxr-xr-x. 2 root root 4096 5月   8 15:52 libdrwxr-xr-x. 4 root root 4096 7月   2 18:42 logs</code></pre><p>主要需要修改两个配置文件 conf/canal.properties ,conf/example/instance.properties</p>
+<p>vi conf/canal.properties</p>
+<pre><code>##########################################################               common argument         ##############################################################canal.id= 1canal.ip=canal.port= 11111canal.zkServers=127.0.0.1:2181# flush data to zkcanal.zookeeper.flush.period = 1000# flush meta cursor/parse position to filecanal.file.data.dir = ${canal.conf.dir}canal.file.flush.period = 1000## memory store RingBuffer size, should be Math.pow(2,n)canal.instance.memory.buffer.size = 16384## memory store RingBuffer used memory unit size , default 1kbcanal.instance.memory.buffer.memunit = 1024## meory store gets mode used MEMSIZE or ITEMSIZEcanal.instance.memory.batch.mode = MEMSIZE ## detecing configcanal.instance.detecting.enable = false#canal.instance.detecting.sql = insert into retl.xdual values(1,now()) on duplicate key update x=now()canal.instance.detecting.sql = select 1canal.instance.detecting.interval.time = 3canal.instance.detecting.retry.threshold = 3canal.instance.detecting.heartbeatHaEnable = false # support maximum transaction size, more than the size of the transaction will be cut into multiple transactions deliverycanal.instance.transaction.size =  1024# mysql fallback connected to new master should fallback timescanal.instance.fallbackIntervalInSeconds = 60 # network configcanal.instance.network.receiveBufferSize = 16384canal.instance.network.sendBufferSize = 16384canal.instance.network.soTimeout = 30 # binlog filter configcanal.instance.filter.druid.ddl = truecanal.instance.filter.query.dcl = falsecanal.instance.filter.query.dml = falsecanal.instance.filter.query.ddl = falsecanal.instance.filter.table.error = falsecanal.instance.filter.rows = false # binlog format/image checkcanal.instance.binlog.format = ROW,STATEMENT,MIXEDcanal.instance.binlog.image = FULL,MINIMAL,NOBLOB # binlog ddl isolationcanal.instance.get.ddl.isolation = false ##########################################################               destinations            ##############################################################canal.destinations= example# conf root dircanal.conf.dir = ../conf# auto scan instance dir add/remove and start/stop instancecanal.auto.scan = truecanal.auto.scan.interval = 5</code></pre><p> vi conf/example/instance.properties</p>
+<pre><code>################################################### mysql serverIdcanal.instance.mysql.slaveId=1234# position infocanal.instance.master.address=147.18.1.52:3306canal.instance.master.journal.name=canal.instance.master.position=canal.instance.master.timestamp=  # table meta tsdb infocanal.instance.tsdb.enable=truecanal.instance.tsdb.dir=${canal.file.data.dir:../conf}/${canal.instance.destination:}canal.instance.tsdb.url=jdbc:h2:${canal.instance.tsdb.dir}/h2;CACHE_SIZE=1000;MODE=MYSQL;#canal.instance.tsdb.url=jdbc:mysql://127.0.0.1:3306/canal_tsdbcanal.instance.tsdb.dbUsername=canalcanal.instance.tsdb.dbPassword=canal  #canal.instance.standby.address =#canal.instance.standby.journal.name =#canal.instance.standby.position =#canal.instance.standby.timestamp =# username/passwordcanal.instance.dbUsername=rootcanal.instance.dbPassword=jhtest124canal.instance.defaultDatabaseName=userdbcanal.instance.connectionCharset=UTF-8# table regexcanal.instance.filter.regex=userdb.tshop,shj_cate_db.tdishes,shj_cate_db.tdishestype,shj_cate_db.tattachindishes# table black regexcanal.instance.filter.black.regex=#################################################</code></pre><p> 上面红色背景的配置都是比较重要的配置,其它配置使用默认的就好</p>
+<p>canal.properties </p>
+<p>canal.zkServers=127.0.0.1:2181 //在使用HA 模式时,需要配置该属性,用于协调主备canal server以及记录日志信息消费情况(后面会详细说明)</p>
+<p>instance.properties</p>
+<p>canal.instance.mysql.slaveId=1234 // 这个配置不能与其它的canal服务器的配置重复  </p>
+<p>canal.instance.master.address=147.18.1.52:3306 //mysql的ip和端口(也可以是域名加端口,比如阿里云服务的rds)</p>
+<p>canal.instance.dbUsername=root   </p>
+<p>canal.instance.dbPassword=jhtest124</p>
+<p>//mysql具有足够权限(SELECT, REPLICATION SLAVE, REPLICATION CLIENT)的用户名,密码</p>
+<p>canal.instance.filter.regex=userdb.tshop,shj_cate_db.tdishes,shj_cate_db.tdishestype,shj_cate_db.tattachindishes</p>
+<p>//一般情况下,这个参数不配置的时候canal也可以正常运行,但是mysql为阿里云rds时会报错,贴一段canal源码吧,如下:</p>
+<ol>
+<li>show databases 查询mysql所有库(schema )</li>
+<li>show tables from <code>&quot; + schema + &quot;</code> for循环中查询每个库的所有表</li>
+<li>show create table <code>&quot; + schema + &quot;</code>.<code>&quot; + table + &quot;</code>;&quot; 查询每个表的创建语句(canal原理就是mysql的主备复制)</li>
+<li>在通过3得到的创建语句,在本地的mysql创建这些表</li>
+</ol>
+<p>问题在于,如果不配置canal.instance.filter.regex,在第2步时,canal会将mysql master所有的表,包括view视图,问题就在这了,在对rds执行(show create table + 视图)的时候会报没有权限错误,就是你去设置用户权限也不行,rds就没有开放这个权限.</p>
+<p>设置了canal.instance.filter.regex这个参数后,第2步在for循环中,会将不在参数中的表过滤掉,这样就这处理业务关心的表.</p>
+<pre><code>/**     * 初始化的时候dump一下表结构     */    private boolean dumpTableMeta(MysqlConnection connection, final CanalEventFilter filter) {        try {            ResultSetPacket packet = connection.query(&quot;show databases&quot;);//1            List&lt;String&gt; schemas = new ArrayList&lt;String&gt;();            for (String schema : packet.getFieldValues()) {                schemas.add(schema);            }             for (String schema : schemas) {                packet = connection.query(&quot;show tables from `&quot; + schema + &quot;`&quot;);//2                List&lt;String&gt; tables = new ArrayList&lt;String&gt;();                for (String table : packet.getFieldValues()) {                    String fullName = schema + &quot;.&quot; + table;                    if (blackFilter == null || !blackFilter.filter(fullName)) {                        if (filter == null || filter.filter(fullName)) {                            tables.add(table);                        }                    }                }                 if (tables.isEmpty()) {                    continue;                }                 StringBuilder sql = new StringBuilder();                for (String table : tables) {                    sql.append(&quot;show create table `&quot; + schema + &quot;`.`&quot; + table + &quot;`;&quot;);//3                }                 List&lt;ResultSetPacket&gt; packets = connection.queryMulti(sql.toString());                for (ResultSetPacket onePacket : packets) {                    if (onePacket.getFieldValues().size() &gt; 1) {                        String oneTableCreateSql = onePacket.getFieldValues().get(1);                        memoryTableMeta.apply(INIT_POSITION, schema, oneTableCreateSql, null);//4                    }                }            }            return true;        } catch (IOException e) {            throw new CanalParseException(e);        }    }</code></pre><p>配置好了后,执行bin目录下的startup.sh就跑起来了.</p>
+<h2 id="zookeeper的作用">Zookeeper的作用</h2><p>数据节点结构如下:</p>
+<p>/otter/canal/<br>  |- destinations<br>     |- example/<br>     |  |- cluster   ==&gt;[172.18.0.52:11111,172.18.0.50:11111]<br>     |  |- running   ==&gt;{&quot;active&quot;:true,&quot;address&quot;:&quot;172.18.0.52:11111&quot;,&quot;cid&quot;:1}<br>     |  |- 1001<br>     |     |-running ==&gt; {&quot;active&quot;:true,&quot;address&quot;:&quot;172.18.0.53:62744&quot;,&quot;clientId&quot;:1001}<br>     |     |-cursor==&gt;<br>{&quot;@type&quot;:&quot;com.alibaba.otter.canal.protocol.position.LogPosition&quot;,&quot;identity&quot;:{&quot;slaveId&quot;:-1,&quot;sourceAddress&quot;:{&quot;address&quot;:&quot;172.18.0.52&quot;,&quot;port&quot;:3306}},&quot;postion&quot;:{&quot;included&quot;:false,&quot;journalName&quot;:&quot;mysql-bin.000002&quot;,&quot;position&quot;:124582810,&quot;<br>serverId&quot;:1,&quot;timestamp&quot;:1530538222000}}  </p>
+<p>/otter/canal/destinations/example/cluster       记录canal服务端集群信息,具体就是canal服务器的ip和端口集合<br>/otter/canal/destinations/example/running        正在运行的canal服务器节点信息<br>/otter/canal/destinations/example/1001/running  canal客户端节点信息<br>/otter/canal/destinations/example/1001/cursor   canal客户端的变更日志游标   </p>
+<h4 id="canal server 和canal client 不在同一个子网的问题:">canal server 和canal client 不在同一个子网的问题:</h4><p>/otter/canal/destinations/example/running 节点记录正在执行任务的canal server的ip和端口,canal client就是通过这个节点的数据然后再去访问canal server的.</p>
+<p>canal server 在执行的时候会将默认情况下是将内网地址写入这个节点了,如果canal client和canal server 不在一个子网,那就不能访问到canal server.</p>
+<p>conf/canal.properties 有canal.ip 的参数,可以配置,但仍然会有问题.当时我是修改了源码,重新编译后才搞定的,canal最新版本现在好像已经修复了.</p>
+
+            </div>
+            
+            
+              <div class="next-post">
+                <div class="next">下一篇</div>
+                <a href="https://www.131.im/post/FD5OmxPdJ">
+                  <h3 class="post-title">
+                    深度挖掘 Laravel 生命周期
+                  </h3>
+                </a>
+              </div>
+            
+
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+
+<script type="application/javascript">
+
+AOS.init();
+
+hljs.initHighlightingOnLoad()
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+
+
+  </body>
+</html>
