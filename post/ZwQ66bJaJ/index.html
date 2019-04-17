@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>laravel5.4 redis cluster | Hub</title>
+<meta name="description" content="">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="shortcut icon" href="https://www.131.im/favicon.ico">
+<link rel="stylesheet" href="https://www.131.im/styles/main.css">
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+
+
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://www.131.im">
+        <img src="https://www.131.im/images/avatar.png" class="site-logo">
+        <h1 class="site-title">Hub</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="/" class="site-nav">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="site-nav">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="site-nav">
+            标签
+          </a>
+        
+      
+        
+          <a href="/post/about" class="site-nav">
+            关于
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="site-description">
+      
+    </div>
+    <div class="site-footer">
+      
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title">laravel5.4 redis cluster</h2>
+            <div class="post-date">2019-04-17 18:37</div>
+            
+            <div class="post-content">
+              <pre><code class="language-php">
+        'client' =&gt; 'predis',
+
+        'options' =&gt; [
+            'cluster' =&gt; 'redis',
+            'env' =&gt; [
+                'local', 'pre'
+            ]
+        ],
+        'clusters' =&gt; [
+            'default' =&gt; [
+                [
+                    'host' =&gt; '127.0.0.1',
+                    'password' =&gt; null,
+                    'port' =&gt; 7000,
+                    'database' =&gt; 0,
+                ],
+                [
+                    'host' =&gt; '127.0.0.1',
+                    'password' =&gt; null,
+                    'port' =&gt; 7001,
+                    'database' =&gt; 0,
+                ],
+                [
+                    'host' =&gt; '127.0.0.1',
+                    'password' =&gt; null,
+                    'port' =&gt; 7002,
+                    'database' =&gt; 0,
+                ],
+                [
+                    'host' =&gt; '127.0.0.1',
+                    'password' =&gt; null,
+                    'port' =&gt; 7003,
+                    'database' =&gt; 0,
+                ], [
+                    'host' =&gt; '127.0.0.1',
+                    'password' =&gt; null,
+                    'port' =&gt; 7004,
+                    'database' =&gt; 0,
+                ], [
+                    'host' =&gt; '127.0.0.1',
+                    'password' =&gt; null,
+                    'port' =&gt; 7005,
+                    'database' =&gt; 0,
+                ],
+            ]
+        ],
+</code></pre>
+
+            </div>
+            
+              <div class="tag-container">
+                
+                  <a href="https://www.131.im/tag/laravel" class="tag">
+                    laravel
+                  </a>
+                
+                  <a href="https://www.131.im/tag/redis" class="tag">
+                    redis
+                  </a>
+                
+              </div>
+            
+            
+              <div class="next-post">
+                <div class="next">下一篇</div>
+                <a href="https://www.131.im/post/FD5OmxPdJ">
+                  <h3 class="post-title">
+                    深度挖掘 Laravel 生命周期
+                  </h3>
+                </a>
+              </div>
+            
+
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+
+<script type="application/javascript">
+
+AOS.init();
+
+hljs.initHighlightingOnLoad()
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+
+
+  </body>
+</html>
